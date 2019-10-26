@@ -1,6 +1,6 @@
-# YHack-2019
-YHack 2019 project - filter (screen) resume based on experience and skill sets.
+i# YHack-2019
+**YHack 2019 project**
+Filter resume based on candidate's education status (university, college, no post secondary), GPA, skill sets, and more using machine learning.
 
-Find (a) right candidiate(s) for company.
-
-Classify and organize information on resume to rank resume with others.
+Automated resume screening and ranking system to find (a) right candidiate(s) for company.
+The system classifies and organizes information on resume to filter suitable candidates for positions.
