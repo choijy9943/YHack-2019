@@ -2,7 +2,8 @@
 
 
 #importing all required libraries
-
+from tika import parser
+import numpy as np
 import PyPDF2
 import os
 from io import StringIO
@@ -13,21 +14,27 @@ nlp = en_core_web_sm.load()
 from spacy.matcher import PhraseMatcher
 
 #Function to read resumes from the folder one by one
-mypath = 'address'#enter your path here where you saved the resumes
+mypath = "/Users/jaesmacbook/Desktop/sample_resumes"
+#enter your path here where you saved the resumes
 onlyfiles = [os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 
 def pdfextract(file):
+    raw = parser.from_file(file)
+    pdfFileObj = open(file, 'rb')
+    # pdf reader object
+    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+
     fileReader = PyPDF2.PdfFileReader(open(file,'rb'))
-    countpage = fileReader.getNumPages()
+    countpage = pdfReader.getNumPages()
     count = 0
     text = []
     while count < countpage:    
-        pageObj = fileReader.getPage(count)
+        pageObj = pdfReader.getPage(count)
         count +=1
         t = pageObj.extractText()
         print (t)
         text.append(t)
-    return text
+    return raw
 
 #function to read resume ends
 
@@ -35,15 +42,16 @@ def pdfextract(file):
 #function that does phrase matching and builds a candidate profile
 def create_profile(file):
     text = pdfextract(file) 
+    print(text)
     text = str(text)
     text = text.replace("\\n", "")
     text = text.lower()
     #below is the csv where we have all the keywords, you can customize your own
     keyword_dict = pd.read_csv('sample.csv')
-    stats_words = [nlp(text) for text in keyword_dict['Statistics'].dropna(axis = 0)]
+    stats_words = [nlp(text) for text in keyword_dict['Statictics'].dropna(axis = 0)]
     NLP_words = [nlp(text) for text in keyword_dict['NLP'].dropna(axis = 0)]
-    ML_words = [nlp(text) for text in keyword_dict['Machine Learning'].dropna(axis = 0)]
-    DL_words = [nlp(text) for text in keyword_dict['Deep Learning'].dropna(axis = 0)]
+    ML_words = [nlp(text) for text in keyword_dict['ML'].dropna(axis = 0)]
+    DL_words = [nlp(text) for text in keyword_dict['DL'].dropna(axis = 0)]
     Data_Engineering_words = [nlp(text) for text in keyword_dict['Data Engineering'].dropna(axis = 0)]
 
     matcher = PhraseMatcher(nlp.vocab)
@@ -101,14 +109,18 @@ while i < len(onlyfiles):
 
 final_database2 = final_database['Keyword'].groupby([final_database['Candidate Name'], final_database['Subject']]).count().unstack()
 final_database2.reset_index(inplace = True)
-final_database2.fillna(0,inplace=True)
+final_database2=final_database2.fillna(0,inplace=True)
 new_data = final_database2.iloc[:,1:]
 new_data.index = final_database2['Candidate Name']
 #execute the below line if you want to see the candidate profile in a csv format
 #sample2=new_data.to_csv('sample.csv')
 import matplotlib.pyplot as plt
+
 plt.rcParams.update({'font.size': 10})
-ax = new_data.plot.barh(title="Resume keywords by category", legend=False, figsize=(25,7), stacked=True)
+#new_data=new_data.astype()
+
+ax = new_data.astype(float).plot.barh(title="Resume keywords by category", legend=False, figsize=(25,7), stacked=True)
+
 labels = []
 for j in new_data.columns:
     for i in new_data.index:
