@@ -12,7 +12,11 @@ from collections import Counter
 import en_core_web_sm
 nlp = en_core_web_sm.load()
 from spacy.matcher import PhraseMatcher
-
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import textract
+import nltk
+words = set(nltk.corpus.words.words())
 #Function to read resumes from the folder one by one
 mypath = "/Users/jaesmacbook/Desktop/sample_resumes"
 #enter your path here where you saved the resumes
@@ -37,13 +41,32 @@ def pdfextract(file):
     return raw
 
 #function to read resume ends
-
+def pdfpp(filename):
+    pdfFileObj = open(filename,'rb')
+    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+    num_pages = pdfReader.numPages
+    count = 0
+    text = ""
+    while count < num_pages:
+        pageObj = pdfReader.getPage(count)
+        count +=1
+        text += pageObj.extractText()
+    if text != "":
+       text = text
+    else:
+       text = textract.process(filename, method='tesseract', language='eng')
+    tokens = word_tokenize(text)
+    punctuation = ['(',')',';',':','[',']',',']
+    stop_words = stopwords.words('english')
+    text1 =" ".join(w for w in nltk.wordpunct_tokenize(text) \
+         if w.lower() in words or not w.isalpha())
+    return text1
 
 #function that does phrase matching and builds a candidate profile
 def create_profile(file):
-    text = pdfextract(file) 
+    text = pdfpp(file) 
     print(text)
-    text = str(text)
+    #ext = str(text)
     text = text.replace("\\n", "")
     text = text.lower()
     #below is the csv where we have all the keywords, you can customize your own
@@ -119,7 +142,7 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 10})
 #new_data=new_data.astype()
 
-ax = new_data.astype(float).plot.barh(title="Resume keywords by category", legend=False, figsize=(25,7), stacked=True)
+ax = new_data.plot.barh(title="Resume keywords by category", legend=False, figsize=(25,7), stacked=True)
 
 labels = []
 for j in new_data.columns:
